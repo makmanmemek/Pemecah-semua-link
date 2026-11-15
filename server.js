@@ -15,5 +15,6 @@ app.get("/api/media-config",(req,res)=>{const cloudName=process.env.CLOUDINARY_C
 // Serve frontend pages explicitly on Vercel and locally.
 app.get("/",(req,res)=>res.sendFile(path.join(__dirname,"public","index.html")));
 app.get("/media.html",(req,res)=>res.sendFile(path.join(__dirname,"public","media.html")));
+app.get("/cloud.html",(req,res)=>res.sendFile(path.join(__dirname,"public","cloud.html")));
 module.exports=app;
 if(require.main===module)app.listen(PORT,()=>console.log("Link Asli aktif di port "+PORT));
