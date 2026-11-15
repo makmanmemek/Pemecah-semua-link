@@ -10,8 +10,9 @@ function pageRedirect(html,base){let tags=html.match(/<meta\b[^>]*>/gi)||[];for(
 let patterns=[/(?:window\s*\.\s*)?location(?:\s*\.\s*href)?\s*=\s*(["'])(.*?)\1/is,/(?:window\s*\.\s*)?location\s*\.\s*(?:assign|replace)\s*\(\s*(["'])(.*?)\1/is];for(const re of patterns){let m=html.match(re);if(m){let target=m[2].replace(/&amp;/gi,"&");return new URL(target,base).href}}return null}
 async function resolve(input){let cur=await valid(input),chain=[cur];for(let i=0;i<10;i++){let r;try{r=await req(cur,"HEAD");if([403,405,501].includes(r.status)||(r.status>=200&&r.status<300&&/html/i.test(r.headers.get("content-type")||"")))r=await req(cur,"GET")}catch(e){throw Error(e.name==="AbortError"?"Waktu tunggu habis.":"Link tidak bisa diakses.")}let loc=r.headers.get("location");if(loc&&[301,302,303,307,308].includes(r.status)){cur=await valid(new URL(loc,cur).href);chain.push(cur);continue}if(r.status>=200&&r.status<300&&/html/i.test(r.headers.get("content-type")||"")){let html=await readLimited(r),target;try{target=pageRedirect(html,cur)}catch{target=null}if(target){cur=await valid(target);chain.push(cur);continue}}return{original:cur,chain,status:r.status,ok:true}}throw Error("Terlalu banyak pengalihan.")}
 app.post("/api/resolve",async(req,res)=>{let urls=req.body?.urls;if(!Array.isArray(urls)||!urls.length||urls.length>MAX)return res.status(400).json({error:"Masukkan 1 sampai 30 link."});let results=await Promise.all(urls.map(async input=>{input=String(input).trim();try{return{input,...await resolve(input)}}catch(e){return{input,ok:false,error:e.message}}}));res.json({results})});
-// Serve the frontend explicitly at the root path on Vercel and locally.
+// Serve frontend pages explicitly on Vercel and locally.
 app.get("/",(req,res)=>res.sendFile(path.join(__dirname,"public","index.html")));
+app.get("/media.html",(req,res)=>res.sendFile(path.join(__dirname,"public","media.html")));
 // Vercel runs this exported Express app.
 module.exports=app;
 if(require.main===module)app.listen(PORT,()=>console.log("Link Asli aktif di port "+PORT));
