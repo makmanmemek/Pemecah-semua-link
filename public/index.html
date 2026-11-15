@@ -25,12 +25,12 @@ textarea{display:block;width:100%;min-height:160px;resize:vertical;background:#0
 <div class="actions"><button class="btn primary" id="resolve">Pecahkan Link</button><button class="btn" id="clear" type="button">Bersihkan</button><button class="btn" id="copyAll" type="button" disabled>Salin Semua Hasil</button></div>
 <p class="status" id="status" role="status" aria-live="polite"></p><div class="results" id="results"></div>
 </section>
-<section class="panel media-panel" aria-label="Bantuan tautan media">
-<h2 style="margin:0 0 8px;font-size:20px">Bantuan Link Media</h2>\n<p class="media-note"><a class="btn primary" href="/media.html" style="display:inline-block;text-decoration:none">Buka Download MP4 & Konversi MP3</a></p>
-<p class="media-note">Kenali link TikTok, YouTube, Instagram, atau tautan file video/audio langsung. Untuk platform sosial, gunakan fitur simpan/unduh resmi dan pastikan kamu punya izin atas kontennya.</p>
+<section class="panel media-panel" aria-label="Pemeriksa link media">
+<h2 style="margin:0 0 8px;font-size:20px">Downloader Media</h2>
+<p class="media-note">Tempel tautan untuk mengenali platform atau memeriksa apakah tautan tersebut adalah file media langsung. Untuk konten platform sosial, pengunduhan harus menggunakan API resmi dan izin yang sesuai.</p>
 <label for="mediaLink">Tempel link media</label>
 <textarea id="mediaLink" style="min-height:82px" placeholder="https://www.tiktok.com/... atau https://domain.com/video.mp4" spellcheck="false"></textarea>
-<div class="actions"><button class="btn primary" id="checkMedia" type="button">Periksa Link Media</button><button class="btn" id="clearMedia" type="button">Bersihkan</button></div>
+<div class="actions"><button class="btn primary" id="checkMedia" type="button">Deteksi Link</button><button class="btn" id="clearMedia" type="button">Bersihkan</button></div>
 <div class="media-result" id="mediaResult" hidden aria-live="polite"></div>
 </section><footer>Link Asli · Pemeriksaan redirect publik HTTP/HTTPS dan halaman statis</footer>
 </main>
@@ -43,4 +43,39 @@ function render(items){resultsEl.replaceChildren();items.forEach((item,i)=>{cons
 run.addEventListener('click',async()=>{const urls=input.value.split(/[\s,]+/).map(x=>x.trim()).filter(Boolean);if(!urls.length){statusEl.textContent='Masukkan minimal satu link.';return}if(urls.length>30){statusEl.textContent='Maksimal 30 link dalam satu proses.';return}run.disabled=true;copyAll.disabled=true;resultsEl.replaceChildren();statusEl.textContent='Memeriksa '+urls.length+' link...';try{const response=await fetch('/api/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})});const data=await response.json();if(!response.ok)throw new Error(data.error||'Permintaan gagal.');latest=data.results||[];render(latest);const ok=latest.filter(x=>x.ok).length;statusEl.textContent='Selesai: '+ok+' dari '+latest.length+' link berhasil diurai.';copyAll.disabled=ok===0}catch(error){statusEl.textContent=error.message||'Terjadi kesalahan saat menghubungi server.'}finally{run.disabled=false}});
 clearBtn.addEventListener('click',()=>{input.value='';latest=[];resultsEl.replaceChildren();statusEl.textContent='';copyAll.disabled=true;input.focus()});
 copyAll.addEventListener('click',()=>{const lines=latest.filter(x=>x.ok).map(x=>(x.chain&&x.chain[x.chain.length-1])||x.original);if(lines.length)copy(lines.join('\n'))});
+
+const mediaInput=document.querySelector('#mediaLink'),mediaResult=document.querySelector('#mediaResult');
+function detectPlatform(host){
+ const h=host.toLowerCase().replace(/^www\./,'');
+ if(h==='tiktok.com'||h.endsWith('.tiktok.com'))return 'TikTok';
+ if(h==='youtube.com'||h.endsWith('.youtube.com')||h==='youtu.be')return 'YouTube';
+ if(h==='instagram.com'||h.endsWith('.instagram.com'))return 'Instagram';
+ if(h==='facebook.com'||h.endsWith('.facebook.com')||h==='fb.watch')return 'Facebook';
+ if(h==='x.com'||h.endsWith('.x.com')||h==='twitter.com'||h.endsWith('.twitter.com')||h==='t.co')return 'X (Twitter)';
+ return null;
+}
+document.querySelector('#checkMedia').addEventListener('click',()=>{
+ mediaResult.replaceChildren();mediaResult.hidden=false;
+ const raw=mediaInput.value.trim();
+ if(!raw){mediaResult.textContent='Masukkan link media terlebih dahulu.';return}
+ let u;try{u=new URL(raw)}catch{mediaResult.textContent='Format link tidak valid.';return}
+ if(!['http:','https:'].includes(u.protocol)){mediaResult.textContent='Hanya link HTTP/HTTPS yang didukung.';return}
+ const platform=detectPlatform(u.hostname),title=document.createElement('strong');
+ if(platform){
+  title.textContent='Platform terdeteksi: '+platform;
+  const note=document.createElement('p');note.className='media-note';
+  note.textContent=platform==='Instagram'?'Media akun yang kamu kelola dapat diintegrasikan melalui API resmi Meta setelah otorisasi akun dan aplikasi disiapkan.':'Untuk platform ini, pengunduhan otomatis memerlukan API resmi yang secara eksplisit mengizinkannya. Konektor tersebut belum dipasang.';
+  mediaResult.append(title,note);return;
+ }
+ if(/\.(mp4|m4v|mov|webm|mp3|m4a|wav|ogg)(?:$|[?#])/i.test(u.pathname+u.search)){
+  title.textContent='Tautan file media langsung terdeteksi';
+  const note=document.createElement('p');note.className='media-note';note.textContent='File masih berada di server sumber. Buka hanya jika sumbernya tepercaya dan pemilik mengizinkan pengunduhan.';
+  const a=document.createElement('a');a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Buka file media';
+  mediaResult.append(title,note,a);return;
+ }
+ title.textContent='Link umum terdeteksi';
+ const note=document.createElement('p');note.className='media-note';note.textContent='Tautan ini belum terlihat seperti file media langsung.';
+ mediaResult.append(title,note);
+});
+document.querySelector('#clearMedia').addEventListener('click',()=>{mediaInput.value='';mediaResult.replaceChildren();mediaResult.hidden=true;mediaInput.focus()});
 </script></body></html>
