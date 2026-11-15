@@ -17,14 +17,14 @@ textarea{display:block;width:100%;min-height:160px;resize:vertical;background:#0
 <body><main class="wrap">
 <div class="brand"><span class="mark">↗</span><span>LINK ASLI</span></div>
 <h1>Pecahkan link pendek.<br>Temukan URL tujuan.</h1>
-<p class="sub">Tempel satu atau beberapa link Bicolink dan shortlink lainnya. Hasil menampilkan alamat tujuan yang ditemukan melalui pengalihan HTTP.</p>
+<p class="sub">Tempel satu atau beberapa link Bicolink dan shortlink lainnya. Link Asli memeriksa redirect HTTP, meta refresh, dan perintah JavaScript sederhana yang tertulis langsung di halaman.</p>
 <section class="panel" aria-label="Pemecah link">
 <label for="links">Masukkan link</label>
 <textarea id="links" placeholder="https://contoh-shortlink.com/abc&#10;https://contoh-shortlink.com/xyz" spellcheck="false"></textarea>
 <p class="hint">Satu link per baris atau pisahkan dengan spasi. Maksimal 30 link per proses.</p>
 <div class="actions"><button class="btn primary" id="resolve">Pecahkan Link</button><button class="btn" id="clear" type="button">Bersihkan</button><button class="btn" id="copyAll" type="button" disabled>Salin Semua Hasil</button></div>
 <p class="status" id="status" role="status" aria-live="polite"></p><div class="results" id="results"></div>
-</section><footer>Link Asli · Pemeriksaan redirect HTTP/HTTPS</footer>
+</section><footer>Link Asli · Pemeriksaan redirect publik HTTP/HTTPS dan halaman statis</footer>
 </main>
 <script>
 const input=document.querySelector('#links'),run=document.querySelector('#resolve'),clearBtn=document.querySelector('#clear'),copyAll=document.querySelector('#copyAll'),statusEl=document.querySelector('#status'),resultsEl=document.querySelector('#results');
