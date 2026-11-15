@@ -1,4 +1,4 @@
-const express=require("express"),dns=require("node:dns").promises,net=require("node:net");
+const express=require("express"),dns=require("node:dns").promises,net=require("node:net"),path=require("node:path");
 const app=express(),PORT=process.env.PORT||3000,MAX=30;
 app.use(express.json({limit:"32kb"}));
 function private4(ip){let p=ip.split(".").map(Number);return p[0]===10||p[0]===127||p[0]===0||(p[0]===169&&p[1]===254)||(p[0]===172&&p[1]>=16&&p[1]<=31)||(p[0]===192&&p[1]===168)||(p[0]===100&&p[1]>=64&&p[1]<=127)||p[0]>=224}
@@ -7,6 +7,8 @@ async function valid(raw){let u;try{u=new URL(raw)}catch{throw Error("Format URL
 async function req(url,method){let c=new AbortController(),t=setTimeout(()=>c.abort(),9000);try{return await fetch(url,{method,redirect:"manual",signal:c.signal,headers:{"User-Agent":"LinkAsliResolver/1.0"}})}finally{clearTimeout(t)}}
 async function resolve(input){let cur=await valid(input),chain=[cur];for(let i=0;i<10;i++){let r;try{r=await req(cur,"HEAD");if([403,405,501].includes(r.status))r=await req(cur,"GET")}catch(e){throw Error(e.name==="AbortError"?"Waktu tunggu habis.":"Link tidak bisa diakses.")}let loc=r.headers.get("location");if(loc&&[301,302,303,307,308].includes(r.status)){cur=await valid(new URL(loc,cur).href);chain.push(cur);continue}return{original:cur,chain,status:r.status,ok:true}}throw Error("Terlalu banyak pengalihan.")}
 app.post("/api/resolve",async(req,res)=>{let urls=req.body?.urls;if(!Array.isArray(urls)||!urls.length||urls.length>MAX)return res.status(400).json({error:"Masukkan 1 sampai 30 link."});let results=await Promise.all(urls.map(async input=>{input=String(input).trim();try{return{input,...await resolve(input)}}catch(e){return{input,ok:false,error:e.message}}}));res.json({results})});
-// Vercel serves /public assets from its CDN and runs this exported Express app.
+// Serve the frontend explicitly at the root path on Vercel and locally.
+app.get("/",(req,res)=>res.sendFile(path.join(__dirname,"public","index.html")));
+// Vercel runs this exported Express app.
 module.exports=app;
 if(require.main===module)app.listen(PORT,()=>console.log("Link Asli aktif di port "+PORT));
