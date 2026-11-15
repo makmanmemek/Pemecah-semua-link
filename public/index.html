@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#080b14">
+<title>Link Asli — Pemecah Link</title>
+<style>
+:root{color-scheme:dark;--bg:#080b14;--panel:#101727;--line:#243149;--muted:#91a0b8;--text:#edf3ff;--accent:#7c9cff;--green:#49d6a0;--red:#ff7b88}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -15%,#1b2c50 0,transparent 55%),var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+.wrap{width:min(920px,calc(100% - 32px));margin:0 auto;padding:54px 0 36px}.brand{display:flex;align-items:center;gap:11px;font-weight:750;letter-spacing:.2px}.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#8aa7ff,#6276ed);color:#081020;font-size:21px}
+h1{font-size:clamp(32px,6vw,52px);line-height:1.08;letter-spacing:-1.8px;margin:34px 0 12px}.sub{color:var(--muted);max-width:620px;margin:0 0 28px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 22px 70px #0005}label{display:block;font-weight:650;margin-bottom:10px}
+textarea{display:block;width:100%;min-height:160px;resize:vertical;background:#080f1c;color:var(--text);border:1px solid #2b3a55;border-radius:13px;padding:15px;font:14px/1.6 ui-monospace,monospace;outline:none}textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px #7c9cff22}
+.hint{color:var(--muted);font-size:12px;margin:9px 0 17px}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{border:1px solid var(--line);border-radius:11px;padding:11px 16px;background:#172238;color:var(--text);font-weight:700;cursor:pointer}.btn.primary{background:linear-gradient(135deg,#91aaff,#7185f5);border:0;color:#081020}.btn:disabled{opacity:.55;cursor:wait}.btn:hover:not(:disabled){filter:brightness(1.12)}
+.status{min-height:24px;margin:14px 0 0;color:var(--muted);font-size:13px}.results{display:grid;gap:12px;margin-top:18px}.result{border:1px solid var(--line);background:#0c1422;border-radius:14px;padding:15px;min-width:0}.result-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:9px}.pill{font-size:11px;font-weight:750;padding:4px 8px;border-radius:99px;background:#12382f;color:var(--green)}.pill.bad{background:#3b202a;color:var(--red)}.url{overflow-wrap:anywhere;font:13px/1.6 ui-monospace,monospace;color:#cbd8f2}.small{font-size:12px;color:var(--muted);margin-top:7px}.result-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}.result-actions .btn{font-size:12px;padding:7px 10px}footer{color:#71809a;text-align:center;font-size:12px;margin-top:25px}
+@media(max-width:560px){.wrap{padding-top:28px}.panel{padding:15px}h1{margin-top:27px}.result-head{align-items:flex-start}}
+</style></head>
+<body><main class="wrap">
+<div class="brand"><span class="mark">↗</span><span>LINK ASLI</span></div>
+<h1>Pecahkan link pendek.<br>Temukan URL tujuan.</h1>
+<p class="sub">Tempel satu atau beberapa link Bicolink dan shortlink lainnya. Hasil menampilkan alamat tujuan yang ditemukan melalui pengalihan HTTP.</p>
+<section class="panel" aria-label="Pemecah link">
+<label for="links">Masukkan link</label>
+<textarea id="links" placeholder="https://contoh-shortlink.com/abc&#10;https://contoh-shortlink.com/xyz" spellcheck="false"></textarea>
+<p class="hint">Satu link per baris atau pisahkan dengan spasi. Maksimal 30 link per proses.</p>
+<div class="actions"><button class="btn primary" id="resolve">Pecahkan Link</button><button class="btn" id="clear" type="button">Bersihkan</button><button class="btn" id="copyAll" type="button" disabled>Salin Semua Hasil</button></div>
+<p class="status" id="status" role="status" aria-live="polite"></p><div class="results" id="results"></div>
+</section><footer>Link Asli · Pemeriksaan redirect HTTP/HTTPS</footer>
+</main>
+<script>
+const input=document.querySelector('#links'),run=document.querySelector('#resolve'),clearBtn=document.querySelector('#clear'),copyAll=document.querySelector('#copyAll'),statusEl=document.querySelector('#status'),resultsEl=document.querySelector('#results');
+let latest=[];
+function make(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el}
+function copy(text){if(!navigator.clipboard){statusEl.textContent='Clipboard tidak tersedia di browser ini.';return}navigator.clipboard.writeText(text).then(()=>{statusEl.textContent='Hasil berhasil disalin.'}).catch(()=>{statusEl.textContent='Gagal menyalin hasil.'})}
+function render(items){resultsEl.replaceChildren();items.forEach((item,i)=>{const card=make('article','result'),head=make('div','result-head'),pill=make('span','pill'+(item.ok?'':' bad'),item.ok?'BERHASIL':'GAGAL');head.append(make('strong','', 'Link '+(i+1)),pill);card.append(head,make('div','small','Link input'),make('div','url',item.input));if(item.ok){const target=(item.chain&&item.chain[item.chain.length-1])||item.original;card.append(make('div','small','URL tujuan'),make('div','url',target));if(item.chain&&item.chain.length>1)card.append(make('div','small','Melewati '+(item.chain.length-1)+' redirect'));card.append(make('div','small','Status HTTP: '+item.status));const actions=make('div','result-actions'),copyBtn=make('button','btn','Salin URL');copyBtn.type='button';copyBtn.addEventListener('click',()=>copy(target));actions.append(copyBtn);card.append(actions)}else{card.append(make('div','small',item.error||'Link tidak dapat diurai.'))}resultsEl.append(card)})}
+run.addEventListener('click',async()=>{const urls=input.value.split(/[\s,]+/).map(x=>x.trim()).filter(Boolean);if(!urls.length){statusEl.textContent='Masukkan minimal satu link.';return}if(urls.length>30){statusEl.textContent='Maksimal 30 link dalam satu proses.';return}run.disabled=true;copyAll.disabled=true;resultsEl.replaceChildren();statusEl.textContent='Memeriksa '+urls.length+' link...';try{const response=await fetch('/api/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})});const data=await response.json();if(!response.ok)throw new Error(data.error||'Permintaan gagal.');latest=data.results||[];render(latest);const ok=latest.filter(x=>x.ok).length;statusEl.textContent='Selesai: '+ok+' dari '+latest.length+' link berhasil diurai.';copyAll.disabled=ok===0}catch(error){statusEl.textContent=error.message||'Terjadi kesalahan saat menghubungi server.'}finally{run.disabled=false}});
+clearBtn.addEventListener('click',()=>{input.value='';latest=[];resultsEl.replaceChildren();statusEl.textContent='';copyAll.disabled=true;input.focus()});
+copyAll.addEventListener('click',()=>{const lines=latest.filter(x=>x.ok).map(x=>(x.chain&&x.chain[x.chain.length-1])||x.original);if(lines.length)copy(lines.join('\n'))});
+</script></body></html>
