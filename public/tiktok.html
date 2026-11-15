@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080b14">
+<title>TikTok Media — Link Asli</title>
+<style>
+:root{color-scheme:dark;--bg:#080b14;--panel:#101727;--line:#243149;--muted:#91a0b8;--text:#edf3ff;--accent:#91aaff;--green:#49d6a0;--red:#ff8791}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -15%,#1b2c50,transparent 55%),var(--bg);color:var(--text);font:15px/1.55 system-ui,sans-serif;min-height:100vh}.wrap{width:min(820px,calc(100% - 30px));margin:auto;padding:32px 0}.brand{font-weight:800;letter-spacing:.5px}.back{color:#b5c5ff}h1{font-size:clamp(30px,6vw,44px);line-height:1.1;margin:28px 0 10px}.muted,.note{color:var(--muted)}.panel{margin-top:20px;padding:20px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}label{display:block;font-weight:700;margin-bottom:9px}textarea{width:100%;min-height:140px;resize:vertical;background:#080f1c;color:var(--text);border:1px solid #2b3a55;border-radius:12px;padding:13px;font:13px/1.6 ui-monospace,monospace}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}button{border:1px solid var(--line);border-radius:10px;background:#172238;color:var(--text);padding:10px 14px;font-weight:700;cursor:pointer}button.primary{background:linear-gradient(135deg,#91aaff,#7185f5);color:#081020;border:0}.status{min-height:22px;color:var(--muted);font-size:13px}.result{padding:12px;margin-top:10px;background:#0b1423;border:1px solid var(--line);border-radius:12px;overflow-wrap:anywhere}.result a{color:#b5c5ff}.result small{display:block;color:var(--muted);margin-top:4px}.steps{padding-left:20px}.steps li{margin:8px 0}.note{font-size:12px}.tag{display:inline-block;padding:3px 8px;border-radius:99px;background:#12382f;color:var(--green);font-size:11px;font-weight:800}
+</style></head>
+<body><main class="wrap">
+<div class="brand">↗ LINK ASLI</div>
+<h1>TikTok Media</h1>
+<p class="muted">Simpan media yang memang menjadi milikmu atau yang kamu punya izin untuk gunakan.</p>
+<section class="panel">
+<span class="tag">Metode ekspor resmi</span>
+<h2 style="font-size:19px;margin:12px 0 6px">Gunakan tautan dari arsip data TikTok milikmu</h2>
+<ol class="steps">
+<li>Di aplikasi TikTok, buka pengaturan akun dan ajukan unduhan data akunmu.</li>
+<li>Setelah arsip tersedia, buka bagian data Posts/Profil dan cari tautan unduhan video yang disediakan TikTok.</li>
+<li>Tempel tautan unduhan tersebut di kotak bawah. Link Asli akan menyiapkan tautan untuk membukanya.</li>
+</ol>
+<p class="note">Fitur ini tidak mengambil video dari sembarang URL TikTok publik. Ketersediaan ekspor, format, dan tautan mengikuti fitur resmi TikTok dan dapat berubah.</p>
+<label for="urls">Tautan unduhan dari arsip TikTok (satu per baris)</label>
+<textarea id="urls" placeholder="https://..."></textarea>
+<div class="actions"><button class="primary" id="make" type="button">Tampilkan tautan</button><button id="clear" type="button">Bersihkan</button></div>
+<p class="status" id="status" role="status" aria-live="polite"></p><div id="results"></div>
+</section>
+<section class="panel">
+<h2 style="font-size:19px;margin:0 0 8px">Sudah punya file video?</h2>
+<p class="muted">Pilih file MP4 yang sudah tersimpan di perangkatmu untuk mengubah audionya menjadi MP3. Proses dilakukan di browser.</p>
+<div class="actions"><a class="back" href="/media.html">Buka konverter MP4 ke MP3 →</a></div>
+</section>
+<p class="note"><a class="back" href="/">← Kembali ke Link Asli</a></p>
+</main>
+<script>
+const input=document.querySelector('#urls'),results=document.querySelector('#results'),status=document.querySelector('#status');
+document.querySelector('#make').addEventListener('click',()=>{
+ results.replaceChildren();const rows=input.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ if(!rows.length){status.textContent='Tempel minimal satu tautan.';return}
+ let valid=0;
+ rows.forEach((raw,i)=>{let u;try{u=new URL(raw)}catch{return}if(u.protocol!=='https:')return;valid++;
+  const card=document.createElement('div');card.className='result';const title=document.createElement('strong');title.textContent='Video '+valid;
+  const link=document.createElement('a');link.href=u.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Buka tautan unduhan';const small=document.createElement('small');small.textContent=u.hostname;
+  card.append(title,document.createElement('br'),link,small);results.append(card);
+ });
+ status.textContent=valid+' tautan HTTPS siap dibuka. '+(rows.length-valid)+' baris dilewati karena format tidak valid.';
+});
+document.querySelector('#clear').addEventListener('click',()=>{input.value='';results.replaceChildren();status.textContent='';input.focus()});
+</script></body></html>
